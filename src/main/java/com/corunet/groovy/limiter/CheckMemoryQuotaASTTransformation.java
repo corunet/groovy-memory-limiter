@@ -12,6 +12,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+import com.sun.management.ThreadMXBean;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -50,15 +51,12 @@ public final class CheckMemoryQuotaASTTransformation
     /**
      * Generates Groovy code to call the check function from the script
      *
-     * @param checkerField the name of the generated checker field
      * @return a Groovy {@link Statement} that calls this.checkerField.check()
      */
-    private static Statement generateCheckStatement(
-        final String checkerField
-    ) {
+    private static Statement generateCheckStatement() {
         // this.init()
         return stmt(callX(
-            propX(varX("this"), checkerField),
+            propX(varX("this"), MemoryQuotaCheck.CHECKER_FIELD),
             "check"
         ));
     }
@@ -66,14 +64,12 @@ public final class CheckMemoryQuotaASTTransformation
     /**
      * Generates Groovy code to initialize the checker field
      *
-     * @param checkerField the name of the checker field
      * @param infringementHandlerClass the class used to handle memory excesses
      * @param infringementHandlerName the method used to handle memory excesses
      * @param limit the memory limit allowed
      * @return a Groovy {@link Statement} that will initialize the checker field on this
      */
     private static Statement generateInitStatement(
-        final String checkerField,
         final ClassExpression infringementHandlerClass,
         final String infringementHandlerName,
         final ConstantExpression limit
@@ -82,15 +78,15 @@ public final class CheckMemoryQuotaASTTransformation
         statement.addStatements(Arrays.asList(
             // this.checker = new MemoryQuotaChecker(ManagementFactory.getThreadMXBean())
             stmt(assignX(
-                propX(varX("this"), checkerField),
+                propX(varX("this"), MemoryQuotaCheck.CHECKER_FIELD),
                 ctorX(
-                    new ClassNode(MemoryQuotaChecker.class),
+                    new ClassNode(MemoryQuotaCheck.class),
                     args(callX(new ClassNode(ManagementFactory.class), "getThreadMXBean"))
                 )
             )),
             // this.checker.setHandler(infringementHandlerClass, infringementHandlerName)
             stmt(callX(
-                propX(varX("this"), checkerField),
+                propX(varX("this"), MemoryQuotaCheck.CHECKER_FIELD),
                 "setHandler",
                 args(
                     infringementHandlerClass,
@@ -99,13 +95,13 @@ public final class CheckMemoryQuotaASTTransformation
             )),
             // this.setLimit(limit)
             stmt(callX(
-                propX(varX("this"), checkerField),
+                propX(varX("this"), MemoryQuotaCheck.CHECKER_FIELD),
                 "setLimit",
                 args(limit)
             )),
             // this.init()
             stmt(callX(
-                propX(varX("this"), checkerField),
+                propX(varX("this"), MemoryQuotaCheck.CHECKER_FIELD),
                 "init"
             ))
         ));
@@ -114,6 +110,14 @@ public final class CheckMemoryQuotaASTTransformation
 
     public void visit(ASTNode[] nodes, SourceUnit source) {
         // Entry point of AST transformation
+        ThreadMXBean threadMXBean = ((ThreadMXBean) ManagementFactory.getThreadMXBean());
+        if (threadMXBean.isThreadAllocatedMemorySupported()) {
+            threadMXBean.setThreadAllocatedMemoryEnabled(true);
+        } else {
+            final String message = "Thread allocated memory not supported by this JVM. CheckMemoryQuota.";
+            throw new UnsupportedOperationException(message);
+        }
+
         if (nodes.length != 2 || !(nodes[0] instanceof AnnotationNode) || !(nodes[1] instanceof AnnotatedNode)) {
             throw new GroovyBugError("Expecting [AnnotationNode, AnnotatedNode] but got: " + Arrays.asList(nodes));
         }
@@ -237,15 +241,13 @@ public final class CheckMemoryQuotaASTTransformation
             .getValue();
 
         // Build statements that can be called from Groovy
-        final String checkerField = "memoryQuotaChecker$" + source.hashCode();
         initCallStatement = generateInitStatement(
-            checkerField,
             infringementHandlerClass,
             infringementHandlerName,
             limitConstant
         );
 
-        checkCallStatement = generateCheckStatement(checkerField);
+        checkCallStatement = generateCheckStatement();
     }
 
     private Statement wrapBlock(Statement wrapped, Statement added) {

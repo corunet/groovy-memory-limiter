@@ -5,7 +5,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer;
 import org.junit.jupiter.api.Test;
@@ -19,8 +21,9 @@ public class CheckMemoryQuotaTest {
     private static class QuotaInfringementHandler {
 
         @SuppressWarnings("unused")
-        public static void handle(long memory) {
-            throw new OutOfMemoryError("Memory quota exceeded, current memory use " + memory + " bytes");
+        public static void handle(MemoryQuotaCheck memoryQuotaCheck) {
+            throw new OutOfMemoryError(
+                "Memory quota exceeded, current memory use " + memoryQuotaCheck.getMaximum() + " bytes");
         }
     }
 
@@ -124,5 +127,30 @@ public class CheckMemoryQuotaTest {
                 + "method() \n"
                 + "return 5"
         ), "Unexpected result on non failing script");
+    }
+
+    @Test
+    void testGetMemoryQuotaChecker() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("limit", MEGABYTES_65);
+        map.put("handlerClass", QuotaInfringementHandler.class);
+        map.put("handlerMethod", "handle");
+        CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
+        compilerConfiguration.addCompilationCustomizers(new ASTTransformationCustomizer(map, CheckMemoryQuota.class));
+        GroovyShell groovyShell = new GroovyShell(compilerConfiguration);
+        //noinspection GroovyUnusedAssignment
+        Script script = groovyShell.parse(
+            "def garbage = new byte[1024 * 1024 * 64]\n"
+                + "def method() { /* do nothing */ }\n"
+                + "method() \n"
+                + "return 5"
+        );
+
+        script.run();
+        MemoryQuotaCheck memoryQuotaCheck =
+            (MemoryQuotaCheck) script.getProperty(MemoryQuotaCheck.CHECKER_FIELD);
+
+        assertTrue(memoryQuotaCheck.getMaximum() > MEGABYTES_64);
+        assertTrue(memoryQuotaCheck.getMaximum() < MEGABYTES_65);
     }
 }

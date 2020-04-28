@@ -3,6 +3,7 @@ package com.corunet.groovy.limiter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 
 import javax.validation.constraints.NotNull;
@@ -14,8 +15,9 @@ import com.sun.management.ThreadMXBean;
  *
  * It stores a base memory usage amount that will not be taken into account when calculating current memory usage.
  */
-public class MemoryQuotaChecker {
+public class MemoryQuotaCheck {
 
+    public static final String CHECKER_FIELD = "$$memoryQuotaCheck";
     /* ThreadMXBean used to enforce memory quota */
     private final ThreadMXBean threadMXBean;
     /* Thread ID whose memory usage will be checked */
@@ -27,14 +29,14 @@ public class MemoryQuotaChecker {
     /* Maximum registered memory */
     private long maximum = 0L;
     /* Infringement handler */
-    private LongConsumer handler;
+    private Consumer<MemoryQuotaCheck> handler;
 
     /**
      * Creates a MemoryCheck that uses the given ThreadMXBean to watch a given thread's memory consumption
      *
      * @param threadMXBean {@link ThreadMXBean} that will be used to measure thread memory allocation
      */
-    public MemoryQuotaChecker(@NotNull ThreadMXBean threadMXBean) {
+    public MemoryQuotaCheck(@NotNull ThreadMXBean threadMXBean) {
         this.threadMXBean = threadMXBean;
     }
 
@@ -45,9 +47,9 @@ public class MemoryQuotaChecker {
      * @param methodName the name of the method
      * @return a LongConsumer that can be used as a handler
      */
-    private static LongConsumer methodToConsumer(Class<?> clazz, String methodName)
+    private static Consumer<MemoryQuotaCheck> methodToConsumer(Class<?> clazz, String methodName)
         throws NoSuchMethodException, IllegalAccessException {
-        Method handler = clazz.getMethod(methodName, long.class);
+        Method handler = clazz.getMethod(methodName, MemoryQuotaCheck.class);
         if (!Modifier.isPublic(handler.getModifiers())) {
             throw new IllegalAccessException(
                 "Method " + methodName + " in class " + clazz.getName() + " is not public");
@@ -70,7 +72,7 @@ public class MemoryQuotaChecker {
                 }
                 // Unless it's a checked one. This shouldn't happen ever
                 // as LongConsumer doesn't support checked exceptions.
-                throw new AssertionError("LongConsumer threw a checked exception", e);
+                throw new AssertionError(" threw a checked exception", e);
             }
         };
     }
@@ -78,20 +80,21 @@ public class MemoryQuotaChecker {
     /**
      * @return the current handler used in case of quota infringement
      */
-    public LongConsumer getHandler() {
+    public Consumer<MemoryQuotaCheck> getHandler() {
         return handler;
     }
 
     /**
      * Allows setting a handler that will be executed in case of quota infringement. This should be a {@link
-     * LongConsumer} accepting a long value that will be the amount of memory usage that caused the checker to go off.
+     * Consumer<MemoryQuotaCheck>} accepting a long value that will be the amount of memory usage that caused the
+     * checker to go off.
      *
      * In order to stop the script, the handler can throw any {@link RuntimeException} or {@link Error}. If this is not
      * catched by Groovy itself, it will bubble up to the toplevel and immediately stop script execution.
      *
      * @param handler the method used to handle memory quota infringements
      */
-    public void setHandler(LongConsumer handler) {
+    public void setHandler(Consumer<MemoryQuotaCheck> handler) {
         this.handler = handler;
     }
 
@@ -154,7 +157,7 @@ public class MemoryQuotaChecker {
 
     /**
      * Stores current memory usage to base memory usage as reported by {@link ThreadMXBean#getThreadAllocatedBytes(long
-     * threadId)}
+     * threadId)} for the thread that this MemoryQuotaCheck watches.
      */
     public void recordBaseUsage() {
         this.baseUsage = this.threadMXBean.getThreadAllocatedBytes(this.threadId);
@@ -194,7 +197,7 @@ public class MemoryQuotaChecker {
     /**
      * Check the thread's memory usage, executes infringement handler if defined.
      */
-    public void check() {
+    void check() {
         if (threadId == 0L) {
             throw new IllegalStateException("Invalid thread id for memory quota check");
         }
@@ -203,7 +206,7 @@ public class MemoryQuotaChecker {
             maximum = current;
         }
         if (handler != null && (current) > limit) {
-            handler.accept(current);
+            handler.accept(this);
         }
     }
 
@@ -211,7 +214,7 @@ public class MemoryQuotaChecker {
      * This is a convenience method to set this MemoryQuotaChecker's thrad id to the current threads id and base memory
      * usage to the current thread's memory usage
      */
-    public void init() {
+    void init() {
         threadId = Thread.currentThread().getId();
         recordBaseUsage();
     }
