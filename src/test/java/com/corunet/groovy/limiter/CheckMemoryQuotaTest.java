@@ -130,6 +130,43 @@ public class CheckMemoryQuotaTest {
     }
 
     @Test
+    void testRunScriptWithQuotaCheckInClosureCallExceed() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("limit", MEGABYTES_64);
+        map.put("handlerClass", QuotaInfringementHandler.class);
+        map.put("handlerMethod", "handle");
+        CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
+        compilerConfiguration.addCompilationCustomizers(new ASTTransformationCustomizer(map, CheckMemoryQuota.class));
+        GroovyShell groovyShell = new GroovyShell(compilerConfiguration);
+        //noinspection GroovyUnusedAssignment,GroovyAssignabilityCheck
+        assertThrows(OutOfMemoryError.class, () -> groovyShell.evaluate(
+            "def garbage = new byte[1024 * 1024 * 64]\n"
+                + "closure = { -> throw new AssertionError(\"Failure\") }\n"
+                + "closure()\n"
+                + "return 5"
+        ));
+    }
+
+    @Test
+    void testRunScriptWithQuotaCheckInClosureCallNormal() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("limit", MEGABYTES_65);
+        map.put("handlerClass", QuotaInfringementHandler.class);
+        map.put("handlerMethod", "handle");
+        CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
+        compilerConfiguration.addCompilationCustomizers(new ASTTransformationCustomizer(map, CheckMemoryQuota.class));
+        GroovyShell groovyShell = new GroovyShell(compilerConfiguration);
+        //noinspection GroovyUnusedAssignment,GroovyAssignabilityCheck
+        assertEquals(5, (int) groovyShell.evaluate(
+            "def garbage = new byte[1024 * 1024 * 64]\n"
+                + "closure = { -> /* do nothing */ }\n"
+                + "closure()\n"
+                + "return 5"
+        ), "Unexpected result on non failing script");
+    }
+
+
+    @Test
     void testGetMemoryQuotaChecker() {
         Map<String, Object> map = new HashMap<>();
         map.put("limit", MEGABYTES_65);

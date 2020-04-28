@@ -2,7 +2,6 @@ package com.corunet.groovy.limiter;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 
@@ -53,12 +52,8 @@ public class MemoryQuotaCheck {
      * @return a LongConsumer that can be used as a handler
      */
     private static Consumer<MemoryQuotaCheck> methodToConsumer(Class<?> clazz, String methodName)
-        throws NoSuchMethodException, IllegalAccessException {
+        throws NoSuchMethodException {
         Method handler = clazz.getMethod(methodName, MemoryQuotaCheck.class);
-        if (!Modifier.isPublic(handler.getModifiers())) {
-            throw new IllegalAccessException(
-                "Method " + methodName + " in class " + clazz.getName() + " is not public");
-        }
         return value -> {
             try {
                 // This is a static method call, the first parameter should
@@ -76,7 +71,7 @@ public class MemoryQuotaCheck {
                     throw (Error) e.getTargetException();
                 }
                 // Unless it's a checked one. This shouldn't happen ever
-                // as LongConsumer doesn't support checked exceptions.
+                // as Consumer<> doesn't support checked exceptions.
                 throw new AssertionError(" threw a checked exception", e);
             }
         };
@@ -115,9 +110,8 @@ public class MemoryQuotaCheck {
      * @param clazz the class holding the static method to handle memory quota infringements
      * @param method the name of the method to be called
      * @throws NoSuchMethodException if the method doesn't exist
-     * @throws IllegalAccessException if the method is not public
      */
-    public void setHandler(Class<?> clazz, String method) throws NoSuchMethodException, IllegalAccessException {
+    public void setHandler(Class<?> clazz, String method) throws NoSuchMethodException {
         this.setHandler(methodToConsumer(clazz, method));
     }
 
