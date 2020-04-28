@@ -153,4 +153,29 @@ public class CheckMemoryQuotaTest {
         assertTrue(memoryQuotaCheck.getMaximum() > MEGABYTES_64);
         assertTrue(memoryQuotaCheck.getMaximum() < MEGABYTES_65);
     }
+
+    @Test
+    void testGetAverageAndChecks() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("limit", MEGABYTES_65);
+        map.put("handlerClass", QuotaInfringementHandler.class);
+        map.put("handlerMethod", "handle");
+        CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
+        compilerConfiguration.addCompilationCustomizers(new ASTTransformationCustomizer(map, CheckMemoryQuota.class));
+        GroovyShell groovyShell = new GroovyShell(compilerConfiguration);
+        //noinspection GroovyUnusedAssignment
+        Script script = groovyShell.parse(
+            "def garbage = new byte[1024 * 1024 * 64]\n"
+                + "def method() { /* do nothing */ }\n"
+                + "method() \n"
+                + "return 5"
+        );
+
+        script.run();
+        MemoryQuotaCheck memoryQuotaCheck =
+            (MemoryQuotaCheck) script.getProperty(MemoryQuotaCheck.CHECKER_FIELD);
+
+        assertTrue(memoryQuotaCheck.getAverage() > 0);
+        assertEquals(1, memoryQuotaCheck.getChecks());
+    }
 }

@@ -31,6 +31,11 @@ public class MemoryQuotaCheck {
     /* Infringement handler */
     private Consumer<MemoryQuotaCheck> handler;
 
+    /* Average memory consumption */
+    private long average = 0L;
+    /* Check count */
+    private long checks = 0L;
+
     /**
      * Creates a MemoryCheck that uses the given ThreadMXBean to watch a given thread's memory consumption
      *
@@ -195,6 +200,33 @@ public class MemoryQuotaCheck {
     }
 
     /**
+     * Returns the average memory measured on all checks performed by this checker.
+     */
+    public long getAverage() {
+        return average;
+    }
+
+    /**
+     * Returns the count of checks performed by this checker
+     */
+    public long getChecks() {
+        return checks;
+    }
+
+    private void updateStats(long current) {
+        if (current > maximum) {
+            maximum = current;
+        }
+
+        if (checks == 0L) {
+            average = current;
+        }
+
+        checks += 1;
+        average = (average * (checks - 1) + current) / checks;
+    }
+
+    /**
      * Check the thread's memory usage, executes infringement handler if defined.
      */
     void check() {
@@ -202,9 +234,9 @@ public class MemoryQuotaCheck {
             throw new IllegalStateException("Invalid thread id for memory quota check");
         }
         final long current = threadMXBean.getThreadAllocatedBytes(threadId) - baseUsage;
-        if (current > maximum) {
-            maximum = current;
-        }
+
+        updateStats(current);
+
         if (handler != null && (current) > limit) {
             handler.accept(this);
         }
