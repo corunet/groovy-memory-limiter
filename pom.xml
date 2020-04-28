@@ -1,9 +1,38 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.focusit</groupId>
-	<artifactId>groovy-mem-limiter</artifactId>
-	<version>1.0.0</version>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.corunet</groupId>
+    <artifactId>groovy-mem-limiter</artifactId>
+    <version>1.0.0</version>
+
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Groovy facilities to check and limit memory
+        allocation on single-thread Groovy scripts
+    </description>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Jacobo Bouzas Quiroga</name>
+            <email>jbouzas@corunet.com</email>
+            <organization>Corunet</organization>
+            <organizationUrl>https://coru.net/</organizationUrl>
+        </developer>
+    </developers>
+
+    <url>https://github.com/corunet/groovy-memory-limiter/</url>
+    <scm>
+        <connection>scm:git:git://github.com/corunet/groovy-memory-limiter.git</connection>
+        <url>https://github.com/corunet/groovy-memory-limiter/tree/master</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
@@ -17,12 +46,12 @@
         </plugins>
     </build>
     <dependencies>
-		<!-- https://mvnrepository.com/artifact/org.codehaus.groovy/groovy-all -->
-		<dependency>
-			<groupId>org.codehaus.groovy</groupId>
-			<artifactId>groovy-all</artifactId>
-			<version>2.4.6</version>
-		</dependency>
+        <!-- https://mvnrepository.com/artifact/org.codehaus.groovy/groovy-all -->
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <version>2.4.6</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

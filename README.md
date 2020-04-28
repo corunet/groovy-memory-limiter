@@ -52,5 +52,8 @@ MemoryQuotaCheck memoryQuotaCheck =
 This uses `com.sun.management.ThreadMXBean` to watch memory allocation of a thread and thus it will only run on JVM
 providing such class (ie. Oracle's JVM).
 
+The quota only applies to the thread that first launches the Groovy script. This will not
+work on multi-threaded code.
+
 Checks are inserted at the beginning of every loop iteration, closure and method call. If the memory limit is infringed
 during a library call or on a long row of assignments, the limiter will not be notified until one of those ocurrs.
