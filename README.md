@@ -5,12 +5,12 @@ It also offers stats on script memory use.
 #### Checking memory
 The limiter will regularly check for the amount of memory allocated
 by the script's executing thread. If it is exceeded, a callback
-will be executed to a method expecting a MemoryQuotaCheck instance,
+will be executed to a method expecting a `MemoryQuotaCheck` instance,
 which can be queried to find out more about the infringement or 
 used to reconfigure the limit.
 
 ###### From Java
-The following code will call the QuotaInfringementHandler#handle method at the beginning `method()`.
+The following code will call the QuotaInfringementHandler#handle method at the beginning of the Groovy `method()`.
 ```java
 public class MemoryLimit {
     public static void main() {}
@@ -34,6 +34,19 @@ public class MemoryLimit {
 
 ###### From Groovy
 Just annotate your script with `@CheckMemoryQuota(limit=bytes, handlerClass=Handler.class, handlerMethod="methodName")`.
+
+#### Recovering stats after execution
+Average and peak memory consumption can be recovered from the `MemoryQuotaCheck`
+instance after the scripts finishes execution. Just recover it from the `Script`
+object like this.
+
+```
+Script script = groovyShell.parse(yourGroovy);
+
+script.run();
+MemoryQuotaCheck memoryQuotaCheck =
+    (MemoryQuotaCheck) script.getProperty(MemoryQuotaCheck.CHECKER_FIELD);
+```
 
 #### Caveats
 This uses `com.sun.management.ThreadMXBean` to watch memory allocation of a thread and thus it will only run on JVM
