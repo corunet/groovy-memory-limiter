@@ -86,8 +86,7 @@ public class MemoryQuotaCheck {
 
     /**
      * Allows setting a handler that will be executed in case of quota infringement. This should be a {@link
-     * Consumer<MemoryQuotaCheck>} accepting a long value that will be the amount of memory usage that caused the
-     * checker to go off.
+     * Consumer} accepting a {@link MemoryQuotaCheck} that will receive this instance.
      *
      * In order to stop the script, the handler can throw any {@link RuntimeException} or {@link Error}. If this is not
      * catched by Groovy itself, it will bubble up to the toplevel and immediately stop script execution.
@@ -100,7 +99,7 @@ public class MemoryQuotaCheck {
 
     /**
      * Allows setting a handler that will be executed in case of quota infringement. This should be a {@link
-     * LongConsumer} accepting a long value that will be the amount of memory usage that caused the checker to go off.
+     * Consumer} accepting a {@link MemoryQuotaCheck} that will receive this instance.
      *
      * This implementation accepts such a method as a Class + method name reference.
      *
@@ -194,14 +193,14 @@ public class MemoryQuotaCheck {
     }
 
     /**
-     * Returns the average memory measured on all checks performed by this checker.
+     * @return the average memory measured on all checks performed by this checker.
      */
     public long getAverage() {
         return average;
     }
 
     /**
-     * Returns the count of checks performed by this checker
+     * @return the count of checks performed by this checker
      */
     public long getChecks() {
         return checks;

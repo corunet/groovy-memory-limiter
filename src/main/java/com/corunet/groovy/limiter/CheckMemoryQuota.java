@@ -18,15 +18,15 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass;
 public @interface CheckMemoryQuota {
 
     /**
-     * Memory limit in bytes
+     * @return memory quota limit in bytes
      */
     long limit();
     /**
-     * Handler class name
+     * @return handler class
      */
     Class<?> handlerClass();
     /**
-     * Handler method name
+     * @return handler method name
      */
     String handlerMethod();
 }
