@@ -57,3 +57,7 @@ work on multi-threaded code.
 
 Checks are inserted at the beginning of every loop iteration, closure and method call. If the memory limit is infringed
 during a library call or on a long row of assignments, the limiter will not be notified until one of those ocurrs.
+
+#### Credit
+
+This project is a fork of [groovy-memory-limiter](https://github.com/d0k1/groovy-memory-limiter) by Denis Kirpichenkov (d0k1).
