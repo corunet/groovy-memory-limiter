@@ -1,8 +1,8 @@
 language: java
 jdk:
   - openjdk8
-  - oraclejdk8
-sudo: false
+dist: xenial
+os: linux
 install: true
 script:
-  - mvn clean install test
+  - mvn clean install test -Dgpg.skip
