@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/corunet/groovy-memory-limiter.svg?branch=master)](https://travis-ci.org/corunet/groovy-memory-limiter)
+
 # groovy-memory-limiter
 Limits memory allocation in a Groovy script by regularly checking allocated memory.
 It also offers stats on script memory use.
