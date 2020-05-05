@@ -29,6 +29,8 @@ public class MemoryQuotaCheck {
     private long maximum = 0L;
     /* Infringement handler */
     private Consumer<MemoryQuotaCheck> handler;
+    /* Checking enabled */
+    private boolean enabled = true;
 
     /* Average memory consumption */
     private long average = 0L;
@@ -216,6 +218,25 @@ public class MemoryQuotaCheck {
         return this.scriptBinding;
     }
 
+    /**
+     * Tells you if memory checking is enabled.
+     * @return true if memory checking is enabled, false otherwise
+     */
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    /**
+     * Allows enabling or disabling memory checking. Once disabled,
+     * memory exceeded callbacks will not be invoked anymore.
+     *
+     * Stats will continue to be calculated.
+     * @param enabled a boolean to represent if memory checks are being carried out
+     */
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     private void updateStats(long current) {
         if (current > maximum) {
             maximum = current;
@@ -240,7 +261,7 @@ public class MemoryQuotaCheck {
 
         updateStats(current);
 
-        if (handler != null && (current) > limit) {
+        if (enabled && handler != null && (current) > limit) {
             handler.accept(this);
         }
     }

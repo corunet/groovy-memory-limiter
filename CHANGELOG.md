@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0]
+### Added
+- The ability to enable/disable quota infringement reports
+
 ## [1.1.0]
 ### Added
 - The ability to retrieve script binding from the quota exceeded handler
@@ -37,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Original code by [Denis Kirpichenkov](https://github.com/d0k1)
 
+[1.2.0]: https://github.com/corunet/groovy-memory-limiter/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/corunet/groovy-memory-limiter/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/corunet/groovy-memory-limiter/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/corunet/groovy-memory-limiter/compare/v1.0.1...v1.0.2

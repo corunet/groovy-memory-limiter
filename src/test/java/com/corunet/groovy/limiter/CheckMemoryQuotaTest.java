@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
@@ -22,10 +23,21 @@ public class CheckMemoryQuotaTest {
 
     private static class QuotaInfringementHandler {
 
+        private static boolean alreadyInvoked = false;
+
         @SuppressWarnings("unused")
         public static void handle(MemoryQuotaCheck memoryQuotaCheck) {
             throw new OutOfMemoryError(
                 "Memory quota exceeded, current memory use " + memoryQuotaCheck.getMaximum() + " bytes");
+        }
+
+        @SuppressWarnings("unused")
+        public static void disableAndFailIfInvokedTwice(MemoryQuotaCheck memoryQuotaCheck) {
+            if (alreadyInvoked) {
+                fail();
+            }
+            memoryQuotaCheck.setEnabled(false);
+            alreadyInvoked = true;
         }
     }
 
@@ -246,6 +258,37 @@ public class CheckMemoryQuotaTest {
 
         assertNotNull(memoryQuotaCheck.getScriptBinding());
         assertEquals("test", memoryQuotaCheck.getScriptBinding().getVariable("dummy"));
+
+    }
+
+    @Test
+    void testSetEnabled() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("limit", MEGABYTES_65);
+        map.put("handlerClass", QuotaInfringementHandler.class);
+        map.put("handlerMethod", "disableAndFailIfInvokedTwice");
+        CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
+        compilerConfiguration.addCompilationCustomizers(new ASTTransformationCustomizer(map, CheckMemoryQuota.class));
+        GroovyShell groovyShell = new GroovyShell(compilerConfiguration);
+
+        //noinspection GroovyUnusedAssignment
+        Script script = groovyShell.parse(
+            "def garbage = new byte[1024 * 1024 * 65]\n"
+                + "def method() { /* do nothing */ }\n"
+                + "method() \n"
+                + "method() \n"
+                + "return 5"
+        );
+
+        Binding binding = new Binding();
+        binding.setVariable("dummy", "test");
+        script.setBinding(binding);
+
+        Integer result = (Integer) script.run();
+        MemoryQuotaCheck memoryQuotaCheck =
+            (MemoryQuotaCheck) script.getProperty(MemoryQuotaCheck.CHECKER_FIELD);
+
+        assertEquals(5, result);
 
     }
 }

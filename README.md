@@ -11,7 +11,12 @@ will be executed to a method expecting a `MemoryQuotaCheck` instance,
 which can be queried to find out more about the infringement or 
 used to reconfigure the limit.
 
-Also, for added flexibility, the script's binding can also be retrieved via `MemoryQuotaCheck.getScriptBinding()`.
+If you are not interrupting the script in response to the quota
+infringement, you may want to disable further reporting via
+`MemoryQuotaCheck.setEnabled()`.
+
+Also, for added flexibility, the script's binding can also be retrieved
+via `MemoryQuotaCheck.getScriptBinding()`.
 
 ###### From Java
 The following code will call the QuotaInfringementHandler#handle method at the beginning of the Groovy `method()`.
