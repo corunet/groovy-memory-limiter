@@ -11,6 +11,8 @@ will be executed to a method expecting a `MemoryQuotaCheck` instance,
 which can be queried to find out more about the infringement or 
 used to reconfigure the limit.
 
+Also, for added flexibility, the script's binding can also be retrieved via `MemoryQuotaCheck.getScriptBinding()`.
+
 ###### From Java
 The following code will call the QuotaInfringementHandler#handle method at the beginning of the Groovy `method()`.
 ```java
@@ -39,7 +41,7 @@ Just annotate your script with `@CheckMemoryQuota(limit=bytes, handlerClass=Hand
 
 #### Recovering stats after execution
 Average and peak memory consumption can be recovered from the `MemoryQuotaCheck`
-instance after the scripts finishes execution. Just recover it from the `Script`
+instance after the script finishes execution. Just recover it from the `Script`
 object like this.
 
 ```

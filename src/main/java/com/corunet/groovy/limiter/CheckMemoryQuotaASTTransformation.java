@@ -93,13 +93,19 @@ public final class CheckMemoryQuotaASTTransformation
                     constX(infringementHandlerName)
                 )
             )),
-            // this.setLimit(limit)
+            // this.checker.setLimit(limit)
             stmt(callX(
                 propX(varX("this"), MemoryQuotaCheck.CHECKER_FIELD),
                 "setLimit",
                 args(limit)
             )),
-            // this.init()
+            // this.checker.setScriptBinding(this.getBinding())
+            stmt(callX(
+                propX(varX("this"), MemoryQuotaCheck.CHECKER_FIELD),
+                "setScriptBinding",
+                args(callX(varX("this"), "getBinding"))
+            )),
+            // this.check.init()
             stmt(callX(
                 propX(varX("this"), MemoryQuotaCheck.CHECKER_FIELD),
                 "init"

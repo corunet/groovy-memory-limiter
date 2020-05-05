@@ -3,11 +3,11 @@ package com.corunet.groovy.limiter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Consumer;
-import java.util.function.LongConsumer;
 
 import javax.validation.constraints.NotNull;
 
 import com.sun.management.ThreadMXBean;
+import groovy.lang.Binding;
 
 /**
  * Watchdog for memory use of a Groovy script.
@@ -34,6 +34,8 @@ public class MemoryQuotaCheck {
     private long average = 0L;
     /* Check count */
     private long checks = 0L;
+    /* Groovy script binding */
+    private Binding scriptBinding;
 
     /**
      * Creates a MemoryCheck that uses the given ThreadMXBean to watch a given thread's memory consumption
@@ -85,8 +87,8 @@ public class MemoryQuotaCheck {
     }
 
     /**
-     * Allows setting a handler that will be executed in case of quota infringement. This should be a {@link
-     * Consumer} accepting a {@link MemoryQuotaCheck} that will receive this instance.
+     * Allows setting a handler that will be executed in case of quota infringement. This should be a {@link Consumer}
+     * accepting a {@link MemoryQuotaCheck} that will receive this instance.
      *
      * In order to stop the script, the handler can throw any {@link RuntimeException} or {@link Error}. If this is not
      * catched by Groovy itself, it will bubble up to the toplevel and immediately stop script execution.
@@ -98,8 +100,8 @@ public class MemoryQuotaCheck {
     }
 
     /**
-     * Allows setting a handler that will be executed in case of quota infringement. This should be a {@link
-     * Consumer} accepting a {@link MemoryQuotaCheck} that will receive this instance.
+     * Allows setting a handler that will be executed in case of quota infringement. This should be a {@link Consumer}
+     * accepting a {@link MemoryQuotaCheck} that will receive this instance.
      *
      * This implementation accepts such a method as a Class + method name reference.
      *
@@ -153,6 +155,10 @@ public class MemoryQuotaCheck {
         this.baseUsage = baseUsage;
     }
 
+    public void setScriptBinding(Binding scriptBinding) {
+        this.scriptBinding = scriptBinding;
+    }
+
     /**
      * Stores current memory usage to base memory usage as reported by {@link ThreadMXBean#getThreadAllocatedBytes(long
      * threadId)} for the thread that this MemoryQuotaCheck watches.
@@ -204,6 +210,10 @@ public class MemoryQuotaCheck {
      */
     public long getChecks() {
         return checks;
+    }
+
+    public Binding getScriptBinding() {
+        return this.scriptBinding;
     }
 
     private void updateStats(long current) {
